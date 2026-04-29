@@ -6,8 +6,14 @@
 
 ## 概覽
 
-本指南使用 **OpenAI API 金鑰**作為模型來源，讓 OpenClaw 呼叫 GPT-5.4 等雲端模型。
-與本機 Ollama 方案不同，這種方式需要一把真實的 API 金鑰——因此**金鑰保護**是本文的核心重點。
+本指南使用 **OpenAI** 作為模型來源，支援兩種驗證方式：
+
+| 方式 | 需求 | 適合對象 |
+|------|------|----------|
+| **API 金鑰**（傳統） | OpenAI 帳號 + 付費 API 餘額 | 開發者、需精細用量控制 |
+| **ChatGPT 訂閱登入**（推薦） | ChatGPT Plus 訂閱（$20/月） | 一般使用者，免手動管理金鑰 |
+
+與本機 Ollama 方案不同，這種方式需要 OpenAI 帳號——因此**金鑰保護**是本文的核心重點。
 
 ---
 
@@ -28,7 +34,12 @@
 - macOS（Intel x86_64）
 - Node.js 22 LTS 或 24（建議）
 - npm
-- OpenAI 帳號與 API 金鑰（[platform.openai.com](https://platform.openai.com)）
+- OpenAI 帳號與 API 金鑰（[platform.openai.com](https://platform.openai.com)）**或** ChatGPT Plus 訂閱
+
+架構確認：
+```bash
+uname -m   # 應顯示 x86_64
+```
 
 ---
 
@@ -69,11 +80,22 @@ node -v   # 應顯示 v24.x.x
 
 ## 步驟三：安裝 OpenClaw
 
+### 方法 A：官方安裝腳本（推薦，v2026.2.26+）
+
+```bash
+curl -fsSL https://openclaw.ai/install.sh | bash
+```
+
+### 方法 B：npm 全域安裝（Intel Mac 備用）
+
 ```bash
 # Intel Mac 加入此環境變數以避免 sharp/libvips 衝突
 SHARP_IGNORE_GLOBAL_LIBVIPS=1 npm install -g openclaw@latest
+```
 
-# 確認安裝成功
+確認安裝成功：
+
+```bash
 openclaw --version
 ```
 
@@ -86,7 +108,28 @@ source ~/.zshrc
 
 ---
 
-## 步驟四：安全設定 API 金鑰
+## 步驟四：設定 OpenAI 驗證
+
+### 方式 A：ChatGPT 訂閱登入（推薦，免 API 金鑰）
+
+若你已有 **ChatGPT Plus** 訂閱，可直接用帳號驗證，無需手動管理金鑰：
+
+```bash
+openclaw onboard --install-daemon
+# 精靈中選擇：OpenAI → Auth Login（而非 API key）
+```
+
+登入後可選用 Codex 模型：
+
+```bash
+openclaw models set openai-codex/gpt-5.3-codex
+```
+
+用量查看：https://chatgpt.com/codex/settings/usage
+
+---
+
+### 方式 B：API 金鑰（進階）
 
 **永遠不要**把金鑰直接貼進 config 檔或 terminal 歷史記錄。
 使用以下方式安全注入：
@@ -144,9 +187,9 @@ openclaw onboard --install-daemon
 
 ### 精靈選項對照
 
-**模型 / 驗證方式** → 選 `OpenAI API key`
-
-精靈會讀取 `$OPENAI_API_KEY` 環境變數，若已設定會自動帶入，確認後按 Enter。
+**模型 / 驗證方式** → 依你的方案選擇：
+- ChatGPT Plus 訂閱 → 選 `OpenAI Auth Login`
+- API 金鑰 → 選 `OpenAI API key`（精靈會讀取 `$OPENAI_API_KEY` 環境變數，若已設定會自動帶入）
 
 ---
 
@@ -209,17 +252,20 @@ openclaw gateway status
 openclaw dashboard
 ```
 
-瀏覽器開啟後，在控制台輸入任何訊息，確認 GPT 有正常回應。
+Gateway 啟動後，也可直接在瀏覽器開啟：`http://127.0.0.1:18789/`
+
+在控制台輸入任何訊息，確認 GPT 有正常回應。
 
 ---
 
 ## 模型選擇建議
 
-| 模型 | 特性 | 建議用途 |
-|------|------|----------|
-| `openai/gpt-5.4` | 最新旗艦，推理能力強 | 複雜任務、程式開發 |
-| `openai/gpt-4o` | 速度與品質平衡 | 日常對話 |
-| `openai/gpt-4o-mini` | 快速、成本低 | 簡單查詢、高頻使用 |
+| 模型 | 特性 | 需求 | 建議用途 |
+|------|------|------|----------|
+| `openai-codex/gpt-5.3-codex` | 程式推理旗艦 | ChatGPT Plus 訂閱 | 複雜程式開發 |
+| `openai/gpt-5.4` | 最新旗艦，推理能力強 | API 金鑰 | 複雜任務 |
+| `openai/gpt-4o` | 速度與品質平衡 | API 金鑰 | 日常對話 |
+| `openai/gpt-4o-mini` | 快速、成本低 | API 金鑰 | 簡單查詢、高頻使用 |
 
 切換模型：
 
